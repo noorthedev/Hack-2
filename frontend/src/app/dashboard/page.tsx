@@ -8,6 +8,7 @@ import TaskForm from '../../components/tasks/TaskForm';
 import TaskList from '../../components/tasks/TaskList';
 import ChatPanel from '../../components/chat/ChatPanel';
 
+
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
