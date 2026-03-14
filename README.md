@@ -1,333 +1,198 @@
-# Phase 2 Todo Full-Stack Web Application
+# Phase III: Todo AI Chatbot
 
-A secure, multi-user task management web application built with Next.js, FastAPI, and PostgreSQL. This project demonstrates modern full-stack development with JWT authentication, RESTful API design, and responsive UI.
-
-## Features
-
-- **User Authentication**: Secure registration and login with JWT tokens
-- **Task Management**: Full CRUD operations for tasks (Create, Read, Update, Delete)
-- **Multi-User Support**: Per-user data isolation - users only see their own tasks
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Real-time Updates**: Instant UI updates after task operations
-- **Error Handling**: Comprehensive error handling with user-friendly messages
-- **Security**: Password hashing with bcrypt, JWT token validation, input sanitization
-
-## Technology Stack
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | Next.js 16+ (App Router) | React-based UI framework with server/client components |
-| **Frontend** | TypeScript | Type-safe JavaScript for better developer experience |
-| **Frontend** | Axios | HTTP client with interceptors for JWT token management |
-| **Backend** | FastAPI | High-performance Python web framework |
-| **Backend** | SQLModel | SQL database ORM with Pydantic integration |
-| **Database** | Neon Serverless PostgreSQL | Scalable, serverless PostgreSQL database |
-| **Authentication** | JWT (JSON Web Tokens) | Stateless authentication mechanism |
-| **Security** | bcrypt | Password hashing algorithm |
+**Project Overview**
+Phase III: Todo AI Chatbot extends the Full-Stack Todo application into a stateless, AI-powered conversational assistant using MCP (Model Context Protocol) and the OpenAI Agents SDK.
+Users can manage their tasks using natural language, while the system translates requests into structured tool calls and securely updates the database
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         Frontend                             │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  Next.js App Router (React Components)               │  │
-│  │  - Auth Context (Login/Register/Logout)              │  │
-│  │  - Task Management UI (Create/View/Update/Delete)    │  │
-│  │  - Responsive Layout & Error Handling                │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                           ↓ HTTP + JWT                      │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  Axios API Client                                     │  │
-│  │  - Request Interceptor (Inject JWT Token)            │  │
-│  │  - Response Interceptor (Handle 401 Errors)          │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                         Backend                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  FastAPI Application                                  │  │
-│  │  - CORS Middleware                                    │  │
-│  │  - Exception Handlers                                 │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                           ↓                                  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  API Routes                                           │  │
-│  │  - /auth/register (POST)                              │  │
-│  │  - /auth/login (POST)                                 │  │
-│  │  - /auth/logout (POST)                                │  │
-│  │  - /tasks (GET, POST)                                 │  │
-│  │  - /tasks/{id} (GET, PUT, DELETE)                     │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                           ↓                                  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  JWT Middleware                                       │  │
-│  │  - Verify JWT Signature                               │  │
-│  │  - Extract User Identity                              │  │
-│  │  - Enforce Authorization                              │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                           ↓                                  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  SQLModel ORM                                         │  │
-│  │  - User Model (id, email, hashed_password)           │  │
-│  │  - Task Model (id, user_id, title, description)      │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│              Neon Serverless PostgreSQL                      │
-│  - users table (indexed on email)                           │
-│  - tasks table (indexed on user_id)                         │
-└─────────────────────────────────────────────────────────────┘
-```
+**Flow:**
+ChatKit UI → FastAPI Chat Endpoint → OpenAI Agent → MCP Tools → Neon Database
 
-## Project Structure
+## Components
 
-```
-phase_II/
-├── backend/                    # FastAPI backend application
-│   ├── src/
-│   │   ├── api/               # API route handlers
-│   │   │   ├── auth.py        # Authentication endpoints
-│   │   │   └── tasks.py       # Task CRUD endpoints
-│   │   ├── middleware/        # Custom middleware
-│   │   │   └── error_handler.py
-│   │   ├── models/            # SQLModel database models
-│   │   │   ├── user.py        # User model
-│   │   │   └── task.py        # Task model
-│   │   ├── schemas/           # Pydantic request/response schemas
-│   │   │   ├── auth.py        # Auth schemas
-│   │   │   └── task.py        # Task schemas
-│   │   ├── utils/             # Utility functions
-│   │   │   ├── jwt.py         # JWT token handling
-│   │   │   ├── security.py    # Password hashing
-│   │   │   └── sanitization.py # Input sanitization
-│   │   ├── config.py          # Configuration settings
-│   │   ├── database.py        # Database connection
-│   │   └── main.py            # FastAPI application entry point
-│   ├── requirements.txt       # Python dependencies
-│   └── .env.example           # Environment variables template
-│
-├── frontend/                   # Next.js frontend application
-│   ├─ src/
-│   │   ├── app/               # Next.js App Router pages
-│   │   │   ├── dashboard/     # Dashboard page (protected)
-│   │   │   ├── login/         # Login page
-│   │   │   ├── register/      # Register page
-│   │   │   ├── layout.tsx     # Root layout with AuthProvider
-│   │   │   ├── page.tsx       # Home page
-│   │   │   └── globals.css    # Global styles
-│   │   ├── components/        # React components
-│   │   │   ├── auth/          # Authentication components
-│   │   │   ├── tasks/         # Task management components
-│   │   │   └── ui/            # Reusable UI components
-│   │   ├── hooks/             # Custom React hooks
-│   │   │   ├── useAuth.ts     # Authentication hook
-│   │   │   └── useTasks.ts    # Task management hook
-│   │   ├── lib/               # Utility libraries
-│   │   │   ├── api.ts         # Axios API client
-│   │   │   ├── auth.ts        # Auth context provider
-│   │   │   └── types.ts       # TypeScript type definitions
-│   │   └── middleware.ts      # Route protection middleware
-│   ├── package.json           # Node.js dependencies
-│   └── .env.example           # Environment variables template
-│
-└── specs/                      # Documentation and specifications
-    └── 001-phase2-todo-app/
-        ├── spec.md            # Feature requirements
-        ├── plan.md            # Implementation plan
-        ├── tasks.md           # Task breakdown
-        ├── data-model.md      # Database schema
-        ├── contracts/         # API contracts (OpenAPI)
-        └── quickstart.md      # Setup guide
-```
+- **Frontend**: OpenAI ChatKit
+- **Backend**: Python FastAPI
+- **AI Framework**: OpenAI Agents SDK
+- **MCP Server**: Official MCP SDK
+- **ORM**: SQLModel
+- **Database**: Neon Serverless PostgreSQL
+- **Authentication**: Better Auth
 
-## Quick Start
+## Features
 
-### Prerequisites
+💬 Conversational interface for todo management
+🧠 Natural language understanding for task actions
+🔄 Stateless API with persistent conversations
+🛠 MCP-based tool execution
+♻ Resume conversations after server restart
+🔐 JWT-secured user access
+📊 User-isolated task handling
+## Setup
 
-- **Python 3.11+**: [Download](https://www.python.org/downloads/)
-- **Node.js 18+**: [Download](https://nodejs.org/)
-- **Neon Account**: [Sign up](https://neon.tech/)
+1. **Environment Variables**:
+   ```bash
+   cp .env.example .env
+   # Update the values in .env
+   ```
 
-### 1. Clone Repository
+2. **Backend**:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   uvicorn src.main:app --reload
+   ```
 
-```bash
-git clone <repository-url>
-cd phase_II
-git checkout 001-phase2-todo-app
-```
+3. **MCP Server**:
+   ```bash
+   cd mcp-server
+   pip install -r requirements.txt
+   python src/server.py
+   ```
 
-### 2. Backend Setup
+4. **Frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-```bash
-cd backend
+## Database Models
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+### Task
+| Field       | Description      |
+| ----------- | ---------------- |
+| id          | Primary key      |
+| user_id     | Owner of task    |
+| title       | Task title       |
+| description | Optional details |
+| completed   | Boolean status   |
+| created_at  | Creation time    |
+| updated_at  | Last update time |
 
-# Install dependencies
-pip install -r requirements.txt
+### Conversation
+| Field      | Description       |
+| ---------- | ----------------- |
+| id         | Conversation ID   |
+| user_id    | Owner             |
+| created_at | Start time        |
+| updated_at | Last message time |
 
-# Configure environment
-cp .env.example .env
-# Edit .env and add:
-# - DATABASE_URL: Your Neon PostgreSQL connection string
-# - JWT_SECRET: A secure random string for JWT token signing
-# - OPENAI_API_KEY: Your OpenAI API key for AI agent (Phase-III)
+### Message
+| Field           | Description         |
+| --------------- | ------------------- |
+| id              | Message ID          |
+| user_id         | Owner               |
+| conversation_id | Linked conversation |
+| role            | user / assistant    |
+| content         | Message text        |
+| created_at      | Timestamp           |
 
-# Start backend server
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-```
+## API Specification
 
-Backend will be available at: http://localhost:8000
-API Documentation: http://localhost:8000/docs
+### Endpoint
 
-**Phase-III AI Chat**: The backend now includes an AI agent that can manage tasks through natural language. The `/api/chat` endpoint accepts user messages and returns AI-generated responses. The agent uses OpenAI's GPT-4 model with MCP tools for task operations.
+`POST /api/{user_id}/chat`
 
-### 3. Frontend Setup
+### Request Body
 
-```bash
-cd frontend
+| Field           | Required | Description                      |
+| --------------- | -------- | -------------------------------- |
+| conversation_id | No       | Existing conversation (optional) |
+| message         | Yes      | User natural language input      |
 
-# Install dependencies
-npm install
+### Response Body
 
-# Configure environment
-cp .env.example .env.local
-# Edit .env.local and set NEXT_PUBLIC_API_URL=http://localhost:8000
+| Field           | Description            |
+| --------------- | ---------------------- |
+| conversation_id | Active conversation ID |
+| response        | Assistant reply        |
+| tool_calls      | MCP tools invoked      |
 
-# Start frontend server
-npm run dev
-```
+## MCP Tools
 
-Frontend will be available at: http://localhost:3000
+### Tool: add_task
 
-### 4. Test the Application
+**Purpose:** Create a new task
 
-1. Navigate to http://localhost:3000/register
-2. Create a new account
-3. Log in with your credentials
-4. Create, view, update, and delete tasks
-5. Test logout functionality
+**Parameters:**
 
-For detailed setup instructions, see [Quickstart Guide](specs/001-phase2-todo-app/quickstart.md).
+* user_id (string, required)
+* title (string, required)
+* description (string, optional)
 
-## API Endpoints
+**Returns:** task_id, status, title
 
-### Authentication
+### 
+🛠 list_tasks
+**Purpose:** Retrieve tasks
 
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login and receive JWT token
-- `POST /auth/logout` - Logout (client-side token removal)
+**Parameters:**
 
-### Tasks (Protected - Requires JWT)
+* user_id (string, required)
+* status (optional: all | pending | completed)
 
-- `GET /tasks` - Get all tasks for authenticated user
-- `POST /tasks` - Create new task
-- `GET /tasks/{id}` - Get specific task
-- `PUT /tasks/{id}` - Update task
-- `DELETE /tasks/{id}` - Delete task
+**Returns:** Array of task objects
 
-Full API documentation available at http://localhost:8000/docs when backend is running.
+### Tool: complete_task
 
-## Authentication Flow
+**Purpose:** Mark task as completed
 
-1. **Registration/Login**: User submits credentials → Backend validates → JWT token generated
-2. **Token Storage**: Frontend stores JWT in localStorage
-3. **API Requests**: Axios interceptor automatically adds `Authorization: Bearer <token>` header
-4. **Token Verification**: Backend middleware verifies JWT signature and extracts user identity
-5. **Authorization**: Backend filters all queries by authenticated user's ID
-6. **Token Expiration**: Frontend interceptor detects 401 errors and redirects to login
+**Parameters:**
 
-## Security Features
+* user_id (string, required)
+* task_id (integer, required)
 
-- **Password Hashing**: bcrypt with salt rounds for secure password storage
-- **JWT Tokens**: Signed tokens with expiration for stateless authentication
-- **Input Sanitization**: XSS prevention through HTML tag removal and length limits
-- **CORS Configuration**: Restricted to allowed origins only
-- **Per-User Data Isolation**: Database queries filtered by authenticated user ID
-- **Authorization Checks**: All protected endpoints verify user ownership
-- **Environment Variables**: Secrets stored in .env files (never committed)
+### Tool: delete_task
 
-## Development
+**Purpose:** Remove task
 
-### Running Tests
+**Parameters:**
 
-```bash
-# Backend tests
-cd backend
-pytest
+* user_id (string, required)
+* task_id (integer, required)
 
-# Frontend tests
-cd frontend
-npm test
-```
+### Tool: update_task
 
-### Code Quality
+**Purpose:** Modify task
 
-- **Backend**: FastAPI automatic validation with Pydantic schemas
-- **Frontend**: TypeScript for type safety
-- **Linting**: Follow project code standards
-- **Error Handling**: Comprehensive error handling at all layers
+**Parameters:**
 
-### Making Changes
+* user_id (string, required)
+* task_id (integer, required)
+* title (optional)
+* description (optional)
 
-1. Create a feature branch: `git checkout -b feature/your-feature`
-2. Make your changes
-3. Test thoroughly
-4. Commit with descriptive messages
-5. Push and create a pull request
+## Agent Behavior Rules
 
-## Documentation
+| Scenario         | Agent Action            |
+| ---------------- | ----------------------- |
+| Add task         | Call add_task           |
+| List tasks       | Call list_tasks         |
+| Complete task    | Call complete_task      |
+| Delete task      | Call delete_task        |
+| Update task      | Call update_task        |
+| Ambiguous delete | List first, then delete |
 
-- **[Feature Specification](specs/001-phase2-todo-app/spec.md)**: User stories and requirements
-- **[Implementation Plan](specs/001-phase2-todo-app/plan.md)**: Architecture and technical decisions
-- **[Task Breakdown](specs/001-phase2-todo-app/tasks.md)**: Detailed implementation tasks
-- **[Data Model](specs/001-phase2-todo-app/data-model.md)**: Database schema and relationships
-- **[API Contracts](specs/001-phase2-todo-app/contracts/)**: OpenAPI specifications
-- **[Quickstart Guide](specs/001-phase2-todo-app/quickstart.md)**: Detailed setup instructions
+The agent must:
 
-## Troubleshooting
+* Always confirm actions
+* Explain errors politely
+* Never expose internal system details
 
-### Backend Issues
+## Natural Language Understanding Examples
 
-- **Database Connection**: Verify Neon connection string in `.env`
-- **Port Conflicts**: Change port with `--port 8001`
-- **Module Errors**: Ensure virtual environment is activated
+| User Input                    | Agent Tool               |
+| ----------------------------- | ------------------------ |
+| "Add a task to buy groceries" | add_task                 |
+| "Show my tasks"               | list_tasks               |
+| "What's pending?"             | list_tasks (pending)     |
+| "Mark task 3 complete"        | complete_task            |
+| "Delete the meeting task"     | list_tasks → delete_task |
+| "Change task 1"               | update_task              |
 
-### Frontend Issues
 
-- **CORS Errors**: Verify backend CORS_ORIGINS includes frontend URL
-- **API Connection**: Check NEXT_PUBLIC_API_URL in `.env.local`
-- **Auth Issues**: Clear localStorage and try logging in again
-
-See [Quickstart Guide](specs/001-phase2-todo-app/quickstart.md) for detailed troubleshooting.
-
-## Contributing
-
-1. Follow the existing code structure and patterns
-2. Write tests for new features
-3. Update documentation as needed
-4. Ensure all tests pass before submitting PR
-5. Follow commit message conventions
-
-## License
-
-This project is part of a hackathon phase and is intended for educational purposes.
-
-## Support
-
-For issues and questions:
-- Check the [Quickstart Guide](specs/001-phase2-todo-app/quickstart.md)
-- Review API documentation at http://localhost:8000/docs
-- Check browser console for frontend errors
-- Check terminal output for backend errors
-
----
-
-**Built with**: Next.js, FastAPI, SQLModel, Neon PostgreSQL, and JWT Authentication
-
-**Last Updated**: 2026-02-16
+## Contributors
+Hackathon Phase III 
+Powered by OpenAI Agents SDK & MCP
+Spec-Kit Plus + Claude Code
